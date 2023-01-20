@@ -1,6 +1,7 @@
 locals {
-  region = var.region
-  name   = "rapha"
+  region    = var.region
+  name      = "rapha"
+  prod_only = var.env == "prod" ? 1 : 0
 }
 
 module "vpc" {
