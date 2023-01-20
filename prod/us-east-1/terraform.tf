@@ -9,9 +9,10 @@ terraform {
   }
 
   backend "s3" {
-    bucket  = "farah-terraform-state-files-rapha"
-    key     = "prod/us-east-1/terraform.tfstate"
-    region  = "eu-west-1"
-    encrypt = true
+    bucket         = "farah-terraform-state-files-rapha"
+    key            = "prod/us-east-1/terraform.tfstate"
+    dynamodb_table = "farah-terraform-state-lock"
+    region         = "eu-west-1"
+    encrypt        = true
   }
 }
