@@ -4,6 +4,8 @@ resource "aws_autoscaling_policy" "scale-up" {
   adjustment_type        = "ChangeInCapacity"
   cooldown               = 300
   autoscaling_group_name = aws_autoscaling_group.webserver.name
+
+  count = local.prod_only
 }
 
 resource "aws_autoscaling_policy" "scale-down" {
@@ -12,6 +14,8 @@ resource "aws_autoscaling_policy" "scale-down" {
   adjustment_type        = "ChangeInCapacity"
   cooldown               = 300
   autoscaling_group_name = aws_autoscaling_group.webserver.name
+
+  count = local.prod_only
 }
 
 resource "aws_cloudwatch_metric_alarm" "high-cpu" {
@@ -29,7 +33,9 @@ resource "aws_cloudwatch_metric_alarm" "high-cpu" {
   }
 
   alarm_description = "This metric monitors EC2 CPU utilization"
-  alarm_actions     = [aws_autoscaling_policy.scale-up.arn]
+  alarm_actions     = [aws_autoscaling_policy.scale-up[count.index].arn]
+
+  count = local.prod_only
 }
 
 resource "aws_cloudwatch_metric_alarm" "low-cpu" {
@@ -47,5 +53,7 @@ resource "aws_cloudwatch_metric_alarm" "low-cpu" {
   }
 
   alarm_description = "This metric monitors EC2 CPU utilization"
-  alarm_actions     = [aws_autoscaling_policy.scale-down.arn]
+  alarm_actions     = [aws_autoscaling_policy.scale-down[count.index].arn]
+
+  count = local.prod_only
 }
