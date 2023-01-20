@@ -44,3 +44,29 @@ It's also a pretty ugly "Hello World" page.
 - No monitoring of either the infra or AWS Account
 - State file is encrypted at rest
 - Using HTTP protocol (no SSL cert or encryption of data in transit)
+
+## Iteration 2: Visibility + Usability (Stakeholder : User)
+
+Two important points here: 
+1. Site needs to be highly available
+2. SEO is affected by site performance and structure, not just content
+
+High Availability can be hindered by the following: 
+- Downtime during deployment 
+  - Improved by adding `create_before_destroy` parameter in ASG
+- Failure due to high demand
+  - Improved by adding auto-scaling across AZs
+- Failure due to external DoS attack
+  - Improved resilience by adding a load balancer
+- AWS-side / Regional outage
+  - Improved by scaling across AZs and deploying in multiple regions. 
+- Low observability
+  - Improved by adding simple monitoring alarms, which trigger scaling actions. 
+
+#### Latency
+There are two immediate ways to improve latency and customer experience
+- Obtain an SSL certificate and domain to be able to use HTTPS protocol, which enables the traffic to use HTTP2 (newer and faster). 
+- Use Route53 (or another DNS routing service) to a) have a user-friendly site url and b) route a user's traffic to their nearest data-centre. 
+
+**Security:** Also closed up the SG slightly, it is still publicly available, but only over ports 80 and 443. Importantly, SSH access is completely closed. 
+
