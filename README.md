@@ -70,3 +70,35 @@ There are two immediate ways to improve latency and customer experience
 
 **Security:** Also closed up the SG slightly, it is still publicly available, but only over ports 80 and 443. Importantly, SSH access is completely closed. 
 
+## Iteration 3: Collaboration (Stakeholders: Devs / Maintainers)
+
+There are a few things up until this point which naturally made the code easier to maintain and collaborate on, e.g modularisation, it being on Github etc. 
+
+At this stage I also introduced terraform state locking using dynamodb, to protect the state file from corruption due to multiple conflicting writes. 
+#### Env seperation
+I created a development environment, and used conditional count parameters to ensure this env doesn't have the same level of monitoring that production does. This is for cost saving but also "not getting email spam" reasons. 
+
+It is worth noting that altough terraform workspaces, env variables, and simply having different CIDR ranges can all be used for env seperation, I have found that seperation via different AWS accounts (under the same org) and via seperate directories is the most fool-proof. 
+
+AWS Org at this point should look like: 
+- Root Account
+  - Management Account
+  - rapha-prod (where this infra is being build)
+  - rapha-dev 
+
+#### Credentials
+In terms of secret / access keys, they can be used as a resource to prevent devs from building infrastructure locally. Groups can be used to manage access to (especially prod) resources, and those permisions will control what actions devs are allowed to take using terraform. Terraform has an `sts assume role` provider support now, which means each dev only needs one set of credentials which they can use to assume prod or dev env. 
+
+1pass, LastPass or something like Hashicorp Vault can be used to improve the security and rotation of those secrets. 
+
+#### Branching and Static Code Analysis
+There has been a `main` branch until now, but it has not been protected with branch rules. I've added a few such as `require PR before merge` and `new commits dismiss approvals`. 
+
+This is also a great place to implement some static code analysis tools such as StyleCI, Codacy, or bespoke rules using jenkins pipelines for example, to help protect code quality. (Terraform Cloud has Sentinel, but because that runs policy checks after the code is merged, it's a little redundant)
+
+There is no need for a dedicated "dev" branch because the env seperation is done via directories in this case. 
+
+#### Deployments
+It is good practice for TF to be ran using some central, highly visible, resource, rather than locally. Any CI/CD tool will do here, as long as the relevant protections and access is managed. Dependency management is less of a problem in terraform becuase of the `lock.hcl` file, however if there are other dependencies to manage it may be helpful to have a container which can act as a local testing environment for devs. 
+
+Finally, modules can be sourced from GitHub repositories as well, so if this code starts to get too large, or these modules need to be used elsewhere, it can be seperated out into its own repository. It may also be helpful to break it up even further, depending on how much granuality is needed. 
